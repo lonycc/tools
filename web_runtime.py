@@ -1,5 +1,5 @@
 #!/usr/local/bin/python3
-#coding=utf-8
+# coding=utf-8
 # 一个简单的web ide for python
 
 import sys
