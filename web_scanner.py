@@ -1,5 +1,6 @@
-#!/usr/local/bin/python
+#!/usr/local/bin/python3
 # coding=utf-8
+# web路由扫描器
 
 import time
 from queue import Queue
@@ -86,7 +87,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('scanSite', help="The website to be scanned", type=str)
-    parser.add_argument('-d', '--dict', dest="scanDict", help="Dictionary for scanning", type=str, default="dict.txt")
+    parser.add_argument('-d', '--dict', dest="scanDict", help="Dictionary for scanning", type=str, default="web_dict.txt")
     parser.add_argument('-o', '--output', dest="scanOutput", help="Results saved files", type=str, default=0)
     parser.add_argument('-t', '--thread', dest="threadNum", help="Number of threads running the program", type=int, default=10)
     args = parser.parse_args()
