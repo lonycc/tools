@@ -5,7 +5,7 @@
 import sys
 
 def check_version():
-    ’‘’python版本检测‘’‘
+    '''python版本检测'''
     v = sys.version_info
     if v.major == 3 and v.minor >= 4:
         return True
