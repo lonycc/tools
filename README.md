@@ -12,3 +12,13 @@
 **mail_client.py**
 
 > 这个脚本是用tkinter模块写的简易邮件发送客户端;
+
+**restart_windows.py**
+
+> 预约一个windows定时关机任务, 取消定时关机任务
+
+**douban_comment.ipynb**
+
+> 抓取豆瓣电影短评, 结巴分词, 生成词云
+
+![豆瓣电影](./screenshots/douban_movie.png)
