@@ -1,5 +1,5 @@
 # tools
-常用工具
+小工具
 
 **web_scanner.py**
 
@@ -19,7 +19,7 @@
 
 **douban_comment.ipynb**
 
-> 抓取豆瓣电影短评, 结巴分词, 生成词云
+> 抓取豆瓣电影短评, 结巴分词, 生成词云. 需要在jupyter notebook环境下运行. 另外, 由于词云需要字体文件, 可以去字体网站下载, 或者用系统自带的字体.
 
 ![豆瓣电影](./screenshots/douban_movie.png)
 
