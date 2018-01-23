@@ -40,7 +40,7 @@ def start_request(url):
     global store_dir
     html = crawl(url)
     print("now crawling : {0}".format(url))
-    soup = bs(html, "html.parser")
+    soup = BeautifulSoup(html, "html.parser")
     next_page = soup.find('a', class_='next-comment-page')
     extractPic(soup)
     if next_page is not None:
