@@ -9,6 +9,7 @@ from base64 import b64encode, b64decode
 import sys
 import time
 import re
+from bs4 import BeautifulSoup
 socket.setdefaulttimeout(10)
 
 # html源码获取, 其实用requests更方便, 但
