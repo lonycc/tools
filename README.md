@@ -31,7 +31,7 @@
 
 > 这个脚本需要配合`mitmproxy`来使用, 先`pip install mitmproxy`安装, 然后运行`mitmdump -p 8192 -s wechat_parser.py`, 保证你的手机和PC在同一局域网, 打开手机wifi设置, 设置代理. 其中Server为你的PC的IP, Port为8192.
 
-![wifi设置代理](./screenshots/wifi_settings.jpg)
+![wifi设置代理](./screenshots/wifi_setting.jpg)
 
 然后打开浏览器, 访问`http://mitm.it`, 点击安装对应的证书.
 
