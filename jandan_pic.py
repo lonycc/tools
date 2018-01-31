@@ -10,6 +10,7 @@ import sys
 import time
 import re
 from bs4 import BeautifulSoup
+import pymysql
 socket.setdefaulttimeout(10)
 
 # html源码获取, 其实用requests更方便, 但
@@ -37,12 +38,12 @@ def destFile(url, store_dir):
 
 # 递归遍历
 def start_request(url):
-    global store_dir
     html = crawl(url)
     print("now crawling : {0}".format(url))
     soup = BeautifulSoup(html, "html.parser")
     next_page = soup.find('a', class_='next-comment-page')
-    extractPic(soup)
+    download(soup)   #下载到本地
+    # writeDb(soup)  #保存到数据库
     if next_page is not None:
         start_request(urljoin(url, next_page.get('href')))
 
@@ -80,10 +81,8 @@ def getUrl(n, x):
         l += chr(ord(chr(m[i])) ^ (h[(h[v] + h[o]) % 256]))
     return l[26:]
           
-# 图片下载
-def extractPic(soup):
-    global store_dir, app_secret
-    #aaa = soup.find_all("a", text="[查看原图]")
+# 解析页面, 获取图片地址, 下载到本地
+def download(soup):
     spans = soup.find_all('span', class_='img-hash')
     for span in spans:
         img_hash = span.text
@@ -103,25 +102,52 @@ def extractPic(soup):
             print(e, href)
             urllib.request.urlretrieve(href, destFile(href, store_dir))
 
-# 妹子图下载
-if __name__ == '__main__':
-    html = crawl('http://jandan.net/ooxx')  #可以改成 无聊图(pic)/ 画廊(drawings) / 妹子图(ooxx) 版块的首页
-    js_reg = re.findall(r'src="//cdn.jandan.net/static/min/[\w\d\.]+.js"', html)
-    js_url = 'https:' + js_reg[0][5:-1]
-    js_html = crawl(js_url)
-    
-    app_secret = re.findall(r'c=[\w\d\_]+\(e,"[\w\d]+"\);', js_html)
-    app_secret = app_secret[0].split('"')[1]
+# 解析页面, 获取图片地址, 写入数据库
+def writeDb(soup):
+    texts = soup.find_all('div', class_='text')
+    for text in texts:
+        spans = text.find_all('span', class_='img-hash')
+        id = text.find('span', class_='righttext').text
+        if int(id) > last_id:
+            for span in spans:
+                img_hash = span.text
+                href = getUrl(img_hash + '==', app_secret)
+                if href.startswith('//'):
+                    href = "https:{0}".format(href)
+                elif href.startswith('http'):
+                    pass
+                large = href.replace('/mw600/', '/large/')
+                print(id, large)
+                try:
+                    cursor.execute('insert into jandan(large, mw) values(%s, %s)', (large, href))
+                    conn.commit()
+                except Exception as e:
+                    print(e)
 
+# 获取加密串
+def getEncodeKey():
+    html = crawl('https://jandan.net/ooxx')  #可以改成 无聊图(pic)/ 画廊(drawings) / 妹子图(ooxx) 版块的首页
+    js_reg = re.findall(r'src="//cdn.jandan.net/static/min/[\w\d\.]+.js"', html)
+    try:
+        js_url = 'https:' + js_reg[0][5:-1]
+        js_html = crawl(js_url)
+
+        app_secret = re.findall(r'c=[\w\d\_]+\(e,"[\w\d]+"\);', js_html)
+        app_secret = app_secret[0].split('"')[1]
+        return app_secret
+    except Exception as e:
+        print("获取加密串失败")
+        sys.exit(0)
+
+if __name__ == '__main__':
     store_dir = r'F:\ooxx'  #保存路径
-    from_page = input('请输入开始页:')
-    if from_page.isdigit() and from_page != '0':
-        url = 'http://jandan.net/ooxx/page-{0}#comments'.format(from_page)
-        try:
-            start_request(url)
-            print('finished')
-        except KeyboardInterrupt as e:
-            print('now quit')
-            sys.exit(0)
-    else:
-        print('开始页必须为正整数')
+    last_id = 3692992  #最后获取到的楼层id
+    app_secret = getEncodeKey()
+    
+    start_page = input('请输入开始页:')
+    url = 'https://jandan.net/ooxx/page-{0}#comments'.format(start_page)
+    try:
+        start_request(url)
+        print('finished')
+    except KeyboardInterrupt as e:
+        sys.exit(0)
