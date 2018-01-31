@@ -13,6 +13,19 @@ from bs4 import BeautifulSoup
 import pymysql
 socket.setdefaulttimeout(10)
 
+config = {
+    'host':'127.0.0.1',
+    'port':3306,
+    'user':'root',
+    'password':'123456',
+    'db':'test',
+    'charset':'utf8mb4',
+    'cursorclass':pymysql.cursors.DictCursor,
+}
+
+conn = pymysql.connect(**config)  #数据库连接设置
+cursor = conn.cursor()
+
 # html源码获取, 其实用requests更方便, 但
 def crawl(url, referer='https://jandan.net/', host='jandan.net'):
     cookie_support = urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar())
@@ -138,7 +151,14 @@ def getEncodeKey():
     except Exception as e:
         print("获取加密串失败")
         sys.exit(0)
-
+        
+# 关闭数据库指针、数据库连接
+def close():
+    if cursor:
+        cursor.close()
+    if conn:
+        conn.close()
+        
 if __name__ == '__main__':
     store_dir = r'F:\ooxx'  #保存路径
     last_id = 3692992  #最后获取到的楼层id
@@ -150,4 +170,6 @@ if __name__ == '__main__':
         start_request(url)
         print('finished')
     except KeyboardInterrupt as e:
-        sys.exit(0)
+        print('quit')
+    finally:
+        close()
