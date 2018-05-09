@@ -9,6 +9,7 @@ from base64 import b64encode, b64decode
 import sys
 import time
 import re
+import random
 from bs4 import BeautifulSoup
 import pymysql
 socket.setdefaulttimeout(10)
@@ -143,7 +144,7 @@ def getEncodeKey():
     js_reg = re.findall(r'src="//cdn.jandan.net/static/min/[\w\d\.]+.js"', html)
     try:
         js_url = 'https:' + js_reg[0][5:-1]
-        js_html = crawl(js_url)
+        js_html = crawl(js_url+'?'+str(random.random()))
 
         app_secret = re.findall(r'c=[\w\d\_]+\(e,"[\w\d]+"\);', js_html)
         app_secret = app_secret[0].split('"')[1]
