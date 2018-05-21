@@ -1,6 +1,6 @@
 # coding=utf-8
-import urllib.request
 from urllib.parse import urljoin, urlencode
+import requests
 import http.cookiejar
 import socket
 import os
@@ -9,8 +9,8 @@ from base64 import b64encode, b64decode
 import sys
 import time
 import re
-import random
-from bs4 import BeautifulSoup
+from random import random
+from bs4 import BeautifulSoup as BS
 import pymysql
 socket.setdefaulttimeout(10)
 
@@ -24,24 +24,29 @@ config = {
     'cursorclass':pymysql.cursors.DictCursor,
 }
 
+session = requests.Session()
+headers = {
+'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+'Accept-Encoding': 'gzip, deflate',
+'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8,ja;q=0.7',
+'Connection': 'keep-alive',
+'Host': 'jandan.net',
+'Referer': 'https://jandan.net/',
+'Upgrade-Insecure-Requests': '1',
+'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3322.3 Safari/537.36'    
+}
+
 conn = pymysql.connect(**config)  #数据库连接设置
 cursor = conn.cursor()
 
-# html源码获取, 其实用requests更方便, 但
-def crawl(url, referer='https://jandan.net/', host='jandan.net'):
-    cookie_support = urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar())
-    # proxy_support = urllib.request.ProxyHandler({"http":"115.159.50.56:8080"})
-    opener = urllib.request.build_opener(cookie_support, urllib.request.HTTPHandler)
-    urllib.request.install_opener(opener)
-    opener.addheaders = [('User-agent', 'Mozilla/5.0'), ('Accept', '*/*'), ('Referer', referer), ('Host', host)]
-    try:
-        urlop = opener.open(url)
-        html = urlop.read().decode('utf-8')
-        urlop.close()
-        return html
-    except Exception as e:
-        print(e, url)
-        sys.exit(0)
+# 递归遍历
+def start_request(url):
+    r = session.get(url, headers=headers, timeout=10)
+    soup = BS(r.text, 'html.parser')
+    next_page = soup.find('a', class_='previous-comment-page')
+    writeDb(soup)  #保存到数据库
+    if next_page != None:
+        start_request(urljoin(url, next_page.get('href')))
 
 # 组装绝对路径
 def destFile(url, store_dir):
@@ -49,58 +54,13 @@ def destFile(url, store_dir):
         os.mkdir(store_dir)
     pos = url.rindex('/')
     return os.path.join(store_dir, url[pos+1:])
-
-# 递归遍历
-def start_request(url):
-    html = crawl(url)
-    print("now crawling : {0}".format(url))
-    soup = BeautifulSoup(html, "html.parser")
-    next_page = soup.find('a', class_='next-comment-page')
-    download(soup)   #下载到本地
-    # writeDb(soup)  #保存到数据库
-    if next_page is not None:
-        start_request(urljoin(url, next_page.get('href')))
-
-# md5 hash
-def md5_hash(strs):
-    return md5(strs.encode('utf-8')).hexdigest()
-        
-# 由图片hash获取真实地址
-def getUrl(n, x):
-    k = 'DECODE'
-    f = 0
-    x = md5_hash(x)
-    w = md5_hash(x[0:16])
-    u = md5_hash(x[16:32])
-    t = n[0:4]
-    r = w + md5_hash(w + t)
-    n = n[4:]
-    m = b64decode(n)
-    h = [i for i in range(256)]
-    q = [ord(r[j%len(r)]) for j in range(256)]
-    o = 0
-    for i in range(256):
-        o = (o + h[i] + q[i]) % 256
-        tmp = h[i]
-        h[i] = h[o]
-        h[o] = tmp
-    v = o = 0
-    l = ''
-    for i in range(len(m)):
-        v = (v + 1) % 256
-        o = (o + h[v]) % 256
-        tmp = h[v]
-        h[v] = h[o]
-        h[o] = tmp
-        l += chr(ord(chr(m[i])) ^ (h[(h[v] + h[o]) % 256]))
-    return l[26:]
           
 # 解析页面, 获取图片地址, 下载到本地
 def download(soup):
     spans = soup.find_all('span', class_='img-hash')
     for span in spans:
         img_hash = span.text
-        href = getUrl(img_hash + '==', app_secret)
+        href = b64decode(img_hash).decode('utf-8')
         if href.startswith('//'):
             href = "http:{0}".format(href)
         elif href.startswith('http'):
@@ -125,7 +85,7 @@ def writeDb(soup):
         if int(id) > last_id:
             for span in spans:
                 img_hash = span.text
-                href = getUrl(img_hash + '==', app_secret)
+                href = b64decode(img_hash).decode('utf-8')
                 if href.startswith('//'):
                     href = "https:{0}".format(href)
                 elif href.startswith('http'):
@@ -137,16 +97,18 @@ def writeDb(soup):
                     conn.commit()
                 except Exception as e:
                     print(e)
+        else:
+            print('finished')
+            sys.exit(0)
 
 # 获取加密串
 def getEncodeKey():
-    html = crawl('https://jandan.net/ooxx')  #可以改成 无聊图(pic)/ 画廊(drawings) / 妹子图(ooxx) 版块的首页
-    js_reg = re.findall(r'src="//cdn.jandan.net/static/min/[\w\d\.]+.js"', html)
+    r = session.get('https://jandan.net/ooxx', headers=headers, timeout=10)
+    js_reg = re.findall(r'src="//cdn.jandan.net/static/min/[\w\d\.]+.js"', r.text)
     try:
-        js_url = 'https:' + js_reg[0][5:-1]
-        js_html = crawl(js_url+'?'+str(random.random()))
-
-        app_secret = re.findall(r'c=[\w\d\_]+\(e,"[\w\d]+"\);', js_html)
+        js_url = 'https:' + js_reg[len(js_reg) - 1][5:-1]
+        r = session.get(js_url+'?rm='+str(random()), headers=headers, timeout=10)
+        app_secret = re.findall(r'c=[\w\d]+\(e,\"[\w\d]+\"\);', r.text)
         app_secret = app_secret[0].split('"')[1]
         return app_secret
     except Exception as e:
@@ -163,13 +125,9 @@ def close():
 if __name__ == '__main__':
     store_dir = r'F:\ooxx'  #保存路径
     last_id = 3692992  #最后获取到的楼层id
-    app_secret = getEncodeKey()
-    
-    start_page = input('请输入开始页:')
-    url = 'https://jandan.net/ooxx/page-{0}#comments'.format(start_page)
+
     try:
-        start_request(url)
-        print('finished')
+        start_request('https://jandan.net/ooxx')
     except KeyboardInterrupt as e:
         print('quit')
     finally:
