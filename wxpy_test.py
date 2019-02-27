@@ -27,7 +27,7 @@ def sendMessage():
             msg.recall()
             sys.exit(0)
         print('.', end='')
-        t = Timer(300, sendMessage)
+        # t = Timer(300, sendMessage)
         ran_int = random.randint(0, 100)
         t = Timer(300 + ran_int, sendMessage)
         t.start()
