@@ -37,7 +37,7 @@ def toutiao():
 def tt_encrypt():
     now = int(time())
     now_16 = hex(now).upper()[2:]
-    now_16_md5 = md5(now_16.encode('utf-8')).hexdigest().upper()
+    now_16_md5 = md5(str(now).encode('utf-8')).hexdigest().upper()
     if len(now_16) == 8:
         s = now_16_md5[0:5]
         o = now_16_md5[-5:]
