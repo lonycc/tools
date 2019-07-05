@@ -4,7 +4,7 @@ from time import time
 from hashlib import md5
 import json
 
-s = Session()
+session = Session()
 
 def toutiao(referer='http://m.toutiao.com/profile/50502347096/', max_behot_time=''):
     pc = 'https://www.toutiao.com/c/user/50502347096/#mid=50502347096'
@@ -30,7 +30,7 @@ def toutiao(referer='http://m.toutiao.com/profile/50502347096/', max_behot_time=
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'
     }
     h5_api = 'https://www.toutiao.com/pgc/ma/'
-    r = s.get(h5_api, headers=headers, params=h5_data)
+    r = session.get(h5_api, headers=headers, params=h5_data)
     j = json.loads(r.text)
     print(j['data'])
     if j['has_more'] == 1:
