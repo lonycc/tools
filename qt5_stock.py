@@ -5,8 +5,28 @@ from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel
 from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtGui import QCursor, QIcon, QColor, QPalette
 import ctypes
+import platform
 import requests
 import datetime
+import signal
+import atexit
+import traceback
+
+@atexit.register
+def atexit_event():
+    print('exit gentlely.')
+    exc_type, exc_value, exc_tb = sys.exc_info()
+    traceback.print_exception(exc_type, exc_value, exc_tb)
+
+def term_sig_handler(signal_num, frame):
+    print('catched signal %d' % signal_num)
+    sys.exit(0)
+
+def isWindows():
+    plat = platform.platform()
+    if 'Windows' in plat:
+        return True
+    return False
 
 def getStock(stockName):
     response = requests.get(f'http://hq.sinajs.cn/list={stockName}')
@@ -43,7 +63,7 @@ class MyApp(QWidget):
         self.setWindowFlags(Qt.FramelessWindowHint|Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.resize(180, height)   # 悬浮窗宽/高设置
-        self.move(1650, 100)  # 悬浮窗坐标, 以屏幕左上角为原点
+        self.move(100, 100)  # 悬浮窗坐标, 以屏幕左上角为原点
         self.initUI()
 
     def initUI(self):
@@ -98,7 +118,13 @@ class MyApp(QWidget):
         self.setCursor(QCursor(Qt.ArrowCursor))
 
 if __name__ == '__main__':
+    signal.signal(signal.SIGTERM, term_sig_handler)
+    signal.signal(signal.SIGINT, term_sig_handler)
+
+    isWin = isWindows()
     app = QApplication(sys.argv)
     my = MyApp()
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('your_app_id')
+    if isWin:
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('your_app_id')
+
     sys.exit(app.exec_())
