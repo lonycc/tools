@@ -9,30 +9,30 @@ import requests
 import datetime
 
 def getStock(stockName):
-    response = requests.get('http://hq.sinajs.cn/list='+stockName)
+    response = requests.get(f'http://hq.sinajs.cn/list={stockName}')
     listdata = []
-    for item in response.text.split(";"):
+    for item in response.text.split(';'):
         if item.isspace():
             continue
         index0 = item.index("\"")
         item = item[index0+1:len(item)-1]
         itemList = item.split(",")
-        stock = {}
-        stock["name"] = itemList[0]
-        oldPrice = float(itemList[2])
-        price = float(itemList[3])
-        zdfv = float('%.3f' % (price - oldPrice))
-        zdf = float('%.2f' % (zdfv / oldPrice * 100))
-        stock["oldPrice"] = oldPrice
-        stock["price"] = price
-        stock["zdfv"] = zdfv
-        stock["zdf"] = zdf
-        listdata.append(stock)
+        stock = {'name': stockName, 'price': '-', 'zdfv': '-', 'zdf': '-'}
+        try:
+            stock['name'] = itemList[0]
+            old_price = float(itemList[2])
+            stock['price'] = float(itemList[3])
+            stock['zdfv'] = float('%.3f' % (stock['price'] - old_price))
+            stock['zdf'] = float('%.2f' % (stock['zdfv'] / old_price * 100))
+        except:
+            pass
+        finally:
+            listdata.append(stock)
     return listdata
 
 def getStockList():
-    fo = open("stock.list", "r")
-    return ",".join(fo.readlines()).replace("\n", "")
+    fo = open('stock.list', 'r')
+    return ','.join(fo.readlines()).replace('\n', '')
 
 class MyApp(QWidget):
     def __init__(self):
@@ -42,37 +42,37 @@ class MyApp(QWidget):
         height = l * 5
         self.setWindowFlags(Qt.FramelessWindowHint|Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
-        self.resize(180, height)  # 悬浮窗宽/高设置
+        self.resize(180, height)   # 悬浮窗宽/高设置
         self.move(1650, 100)  # 悬浮窗坐标, 以屏幕左上角为原点
         self.initUI()
-    
+
     def initUI(self):
         self.label = QLabel()
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.label)
         self.setLayout(self.layout)
         self.first = True
-       
+
         self.stockData()
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.stockData)
-        self.timer.start(3000)  # 3秒定时刷新
+        self.timer.start(3000)   # 3秒定时刷新
         self.show()
-        
+
     def stockData(self):
         if not self.checkInTime() and not self.first:
             return
-        str = ""
+        str_ = ''
         for item in getStock(self.stockList):
-            name = item["name"]
-            price = item["price"]
-            zdfv = item["zdfv"]
-            zdf = item["zdf"]
-            str_n = '{0} {1} {2}({3}%)\n'.format(name, price, zdfv, zdf)
-            str += str_n
-        self.label.setText(str)
+            name = item['name']
+            price = item['price']
+            zdfv = item['zdfv']
+            zdf = item['zdf']
+            str_n = '{0} {1} / {2} / ({3}%)\n'.format(name, price, zdfv, zdf)
+            str_ += str_n
+        self.label.setText(str_)
         self.first = False
-    
+
     def checkInTime(self):
         amTimeStart = datetime.datetime.strptime(str(datetime.datetime.now().date())+'9:15', '%Y-%m-%d%H:%M')
         amTimeEnd =  datetime.datetime.strptime(str(datetime.datetime.now().date())+'11:30', '%Y-%m-%d%H:%M')
@@ -100,5 +100,5 @@ class MyApp(QWidget):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     my = MyApp()
-    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("myappid")
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('your_app_id')
     sys.exit(app.exec_())
