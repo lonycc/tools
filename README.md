@@ -27,6 +27,10 @@
 
 > 这个脚本下载煎蛋网的图片版块(妹子图/无聊图/画廊/鱼塘)等贴图版块的图片, 低调使用, 不要把煎蛋玩坏了.
 
+**qt5_stock.py**
+
+> 这个脚本生成悬浮窗看股票.
+
 **wechat_parser.py**
 
 > 这个脚本需要配合`mitmproxy`来使用, 先`pip install mitmproxy`安装, 然后运行`mitmdump -p 8192 -s wechat_parser.py`, 保证你的手机和PC在同一局域网, 打开手机wifi设置, 设置代理. 其中Server为你的PC的IP, Port为8192.
