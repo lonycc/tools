@@ -11,6 +11,7 @@ import datetime
 import signal
 import atexit
 import traceback
+import color
 
 @atexit.register
 def atexit_event():
@@ -63,11 +64,12 @@ class MyApp(QWidget):
         self.setWindowFlags(Qt.FramelessWindowHint|Qt.WindowStaysOnTopHint)
         self.setAttribute(Qt.WA_TranslucentBackground)
         self.resize(180, height)   # 悬浮窗宽/高设置
-        self.move(100, 100)  # 悬浮窗坐标, 以屏幕左上角为原点
+        self.move(10, 10)  # 悬浮窗坐标, 以屏幕左上角为原点
         self.initUI()
 
     def initUI(self):
         self.label = QLabel()
+        self.label.setStyleSheet('font: 15pt; color: #00ff00; background-color: #000000;')
         self.layout = QVBoxLayout()
         self.layout.addWidget(self.label)
         self.setLayout(self.layout)
