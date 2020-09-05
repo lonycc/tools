@@ -35,7 +35,7 @@ class GbpxAuto(object):
         """观看视频"""
         videos = self.browser.find_elements_by_xpath('//a[@class="courseware-list-reed"]')
         for i, video in enumerate(videos):
-            if '100.0％' in video.get_attribute('title')
+            if '100.0％' in video.get_attribute('title'):
                 continue
             video.click()
             all_windows = self.browser.window_handles
