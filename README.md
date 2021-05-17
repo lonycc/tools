@@ -31,6 +31,10 @@
 
 > 这个脚本生成悬浮窗看股票.
 
+**fuck_gbpx.py 和 fuck_gbpx_v2.py**
+
+> 这两个脚本是用于模拟操作chrome自动看视频学习获取学分
+
 **Relationship.php**
 
 > 这个脚本是PHP版本的中国亲戚关系计算器, 基于 [js版本](https://github.com/mumuy/relationship) 改造
